@@ -16,5 +16,5 @@ test('GET /health returns UP status', async () => {
 test('GET /version returns version number', async () => {
   const res = await request(app).get('/version');
   expect(res.statusCode).toBe(200);
-  expect(res.body.version).toBe('1.0.0');
+  expect(res.body.version).toBe('9.9.9');
 });
