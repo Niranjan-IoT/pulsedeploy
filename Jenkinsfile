@@ -1,21 +1,48 @@
 pipeline {
     agent any
-
-        stages {
-                stage('Checkout') {
-                            steps {
-                                            checkout scm
-                                                        }
-                                                                }
-                                                                        stage('Install') {
-                                                                                    steps {
-                                                                                                    sh 'npm install'
-                                                                                                                }
-                                                                                                                        }
-                                                                                                                                stage('Test') {
-                                                                                                                                            steps {
-                                                                                                                                                            sh 'npm test'
+    
+        environment {
+                IMAGE = 'niru5002/pulsedeploy'
+                    }
+                    
+                        stages {
+                                stage('Checkout') {
+                                            steps {
+                                                            checkout scm
+                                                                        }
+                                                                                }
+                                                                                        stage('Install') {
+                                                                                                    steps {
+                                                                                                                    sh 'npm install'
+                                                                                                                                }
+                                                                                                                                        }
+                                                                                                                                                stage('Test') {
+                                                                                                                                                            steps {
+                                                                                                                                                                            sh 'npm test'
+                                                                                                                                                                                        }
+                                                                                                                                                                                                }
+                                                                                                                                                                                                        stage('Docker Build') {
+                                                                                                                                                                                                                    steps {
+                                                                                                                                                                                                                                    script {
+                                                                                                                                                                                                                                                        env.GIT_SHORT = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                                        sh 'docker build -t $IMAGE:$GIT_SHORT .'
+                                                                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                                                                                                    stage('Docker Push') {
+                                                                                                                                                                                                                                                                                                                                steps {
+                                                                                                                                                                                                                                                                                                                                                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DH_USER', passwordVariable: 'DH_PASS')]) {
+                                                                                                                                                                                                                                                                                                                                                                    sh '''
+                                                                                                                                                                                                                                                                                                                                                                                            echo "$DH_PASS" | docker login -u "$DH_USER" --password-stdin
+                                                                                                                                                                                                                                                                                                                                                                                                                    docker push $IMAGE:$GIT_SHORT
+                                                                                                                                                                                                                                                                                                                                                                                                                                            docker logout
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                '''
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        }                                                                                                                                          sh 'npm test'
                                                                                                                                                                         }
                                                                                                                                                                                 }
                                                                                                                                                                                     }
-                                                                                                                                                                                    }
+                       
